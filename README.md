@@ -1,7 +1,7 @@
 # TBS Tango2 Dashboard
 A simple lua-based dashboard for the TBS Tango2
 
-# Thank you Farley Farley for the original dashboard !
+# Thank you Farley Farley for the original dashboard and Alexandre Santini for the Tango2 adaptation!
 
 
 

@@ -9,14 +9,14 @@
 -- Templating
 
 -- If you set the GPS, it will not show Quad locator & Power ouput in order to keep a readable screen
-local displayGPS = false
+local displayGPS = true
 
 -- Drone locator & Power ouput
-local displayQuadLocator = true
-local displayPowerOutput = true
+local displayQuadLocator = false
+local displayPowerOutput = false
 
 -- Will be displayed only if displayGPS, Quad locator and PowerOuput are set to false
-local displayFillingText = true
+local displayFillingText = false
 
 ------- GLOBALS -------
 -- The model name when it can't detect a model name  from the handset
@@ -42,6 +42,10 @@ local link_quality = 0
 local lastMessage = "None"
 local lastNumberMessage = "0"
 
+local gpsValue = "None"
+local state = 0
+local voltageLipo = 0
+
 ------- HELPERS -------
 -- Helper converts voltage to percentage of voltage for a sexy battery percent
 local function convertVoltageToPercentage(voltage)
@@ -55,13 +59,15 @@ local function convertVoltageToPercentage(voltage)
   return curVolPercent
 end
 
+
 -- Round routine for GPS
 local function round(num, idp)
   local temp = 10^(idp or 0)
   if num >= 0 then
     return math.floor(num * temp + 0.5) / temp
   else
-    return math.ceil(num * temp - 0.5) / temp end
+    return math.ceil(num * temp - 0.5) / temp 
+  end
 end
 
 -- A little animation / frame counter to help us with various animations
@@ -353,14 +359,14 @@ end
 
 local function drawVoltageText(start_x, start_y)
   -- First, try to get voltage from VFAS...
-  local voltage = getValue('RxBt')
+  voltageLipo = getValue('RxBt')
   -- local voltage = getValue('Cels')   -- For miniwhoop seems more accurate
   -- TODO: if that failed, get voltage from somewhere else from my bigger quads?  Or rebind the voltage to VFAS?
 
-  if tonumber(voltage) >= 10 then
-    lcd.drawText(start_x,start_y,string.format("%.2f", voltage),MIDSIZE)
+  if tonumber(voltageLipo) >= 10 then
+    lcd.drawText(start_x,start_y,string.format("%.2f", voltageLipo),MIDSIZE)
   else
-    lcd.drawText(start_x + 7,start_y,string.format("%.2f", voltage),MIDSIZE)
+    lcd.drawText(start_x + 7,start_y,string.format("%.2f", voltageLipo),MIDSIZE)
   end
   lcd.drawText(start_x + 31, start_y + 4, 'v', MEDSIZE)
 end
@@ -385,14 +391,44 @@ local function drawSendIt(start_x, start_y, rssi_dbm)
   lcd.drawText( start_x + 2, start_y + 2, "Send It !", DBLSIZE )
 
 end
+local function checkState(coords)
+  local gps_lat = 0
+  local gps_lon = 0
+  if (type(coords) == "table") then
+    gps_lat=round(coords["lat"],4)
+    gps_lon=round(coords["lon"],4)
+  end
+  if state == 0 and voltageLipo~=0 then
+    state=1
+  elseif state==1 and voltageLipo==0 then
+    state=0
+  elseif state==1 and voltageLipo~=0 and gps_lat~=0 and gps_lon~=0 then
+    state=2
+  elseif state==2 and voltageLipo==0 and gps_lat==0 and gps_lon==0 then
+    state=3
+  elseif state==3 and voltageLipo>0 then
+    state=1
+  end
+  if state==2 and gps_lat~=0 and gps_lon~=0 then
+    gpsValue = gps_lat .. ", " .. gps_lon
+  end
+end
 
 local function drawGPS(start_x, start_y, coords)
   -- lcd.drawPixMap(start_x, start_y, "/test.bmp")
-  lcd.drawText( start_x + 2, start_y + 2, "GPS coordinates", SMLSIZE )
-  if (type(coords) == "table") then
-    local gpsValue = round(coords["lat"],4) .. ", " .. round(coords["lon"],4)
-    lcd.drawText(start_x + 5, start_y + 12, gpsValue, SMLSIZE)
+  lcd.drawText( start_x + 2, start_y + 2, "GPS coordinates", SMLSIZE ) 
+  checkState(coords)
+  local tmp_gpsValue = "None"
+  if state == 0 then
+    tmp_gpsValue = "Init No Quad"
+  elseif state == 1 then
+    tmp_gpsValue = "Waiting Sats"
+  elseif state == 2 then
+    tmp_gpsValue = gpsValue
+  else
+    tmp_gpsValue = "Saved : " .. gpsValue
   end
+  lcd.drawText(start_x + 5, start_y + 12, tmp_gpsValue, SMLSIZE) 
 end
 
 local function drawVoltageImage(start_x, start_y)
@@ -446,6 +482,9 @@ end
 
 local function gatherInput(event)
 
+
+  --armed = getValue('sa')
+  
   -- Get our link_quality
   link_quality = getValue("TQly")
   -- Get the Output power of the transmitter
@@ -509,7 +548,6 @@ end
 
 local function getModeText()
   local modeText = "Unknown"
-
   if flight_mode == "!ERR" or flight_mode == "!ERR*" then
     modeText = "----"
   elseif flight_mode == "!FS!" or flight_mode == "!FS!*" then
@@ -527,7 +565,7 @@ local function getModeText()
   elseif flight_mode == "ACRO" then
     modeText = "ACRO"
   elseif flight_mode == "WAIT" or flight_mode == "WAIT*" then
-    modeText = "WgAIT"
+    modeText = "WAIT"
   elseif ((string.sub(flight_mode,-1) == "*") and (flight_mode ~= "!ERR*") and (flight_mode ~= "!FS!*") and (flight_mode ~= "WAIT*")) then
     modeText = "DISARM"
   else
@@ -601,13 +639,6 @@ local function run(event)
     drawGPS(3, 65, coords)
   end
 
-
-
-
-
-  --
-
-  -- drawSendIt(47, 65)
   return 0
 end
 
