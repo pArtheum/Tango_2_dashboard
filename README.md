@@ -4,7 +4,7 @@ A simple lua-based dashboard for the TBS Tango2
 # Thank you Farley Farley for the original dashboard and Alexandre Santini for the Tango2 adaptation!
 
 
-## Crossfire does not display Average cells values - If it does, please open an issue to make me correct this (not an expert)
+## Crossfire does not display Average cells values by default
 By default, you will see the cumulated voltages on the display screen. That means that the battery gauge on the left will display irrelevant informations. If you want to fetch average cells voltage, type `set report_cell_voltage = ON` on Betaflight CLI.
 
 ## So, what does it look like ?
