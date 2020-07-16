@@ -4,7 +4,6 @@ A simple lua-based dashboard for the TBS Tango2
 # Thank you Farley Farley for the original dashboard and Alexandre Santini for the Tango2 adaptation!
 
 
-
 ## Crossfire does not display Average cells values - If it does, please open an issue to make me correct this (not an expert)
 By default, you will see the cumulated voltages on the display screen. That means that the battery gauge on the left will display irrelevant informations. If you want to fetch average cells voltage, type `set report_cell_voltage = ON` on Betaflight CLI.
 
@@ -17,11 +16,13 @@ By default, you will see the cumulated voltages on the display screen. That mean
 #### with GPS
 ![](/screenshots/gps.bmp)
 
-### farllh.lua
-![](/screenshots/default-lh.bmp)
-
 
 ## Features
+Added from original Tango 2 Dashboard
+* Save GPS Coordinates when battery unplugged during the fly
+* Indicate when the GPS is looking for satellites and when no quad are connected
+
+Original features
 * Battery voltage (numerical and graphical) (graphical will only work correctly if you put `set  report_cell_voltage = ON` on Betaflight CLI.)
 * Transmitter battery percentage
 * Model name
@@ -57,11 +58,11 @@ local displayFillingText = true
 
 You can choose what you want to display ! If everything is set to False, it will be blank as it was.
 
-The second one is a more simple one, but occupying all the space available : it's the farllh.lua
 
 ## Author
 * Written by Farley Farley - farley <at> neonsurge __dot__ com
 * Adapted by Alexandre Santini for Tango2
+* Modified by Artem Plastinkin
 * From: https://github.com/AndrewFarley/Taranis-XLite-Q7-Lua-Dashboard
 
 ## Installing
